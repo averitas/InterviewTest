@@ -127,15 +127,26 @@ class Order {
 
 class Calculator {
 
-/*	public static double rounding(double value) {
+	/*	public static double rounding(double value) {
 		return ( (int) (value * 100)) / 100;
 	}
 	The round should keep two number after point
 	*/
-
+	// This is to save the price of all the order
 	private double grandtotal;
+	// This is to save the tax of all the order
 	private double grandtax;
+	// This is to save the price of current order
+	private double curTotal;
+	// This is to save the tax of current order
+	private double curTax;
 	
+	public double getCurTotal() {
+		return curTotal;
+	}
+	public double getCurTax() {
+		return curTax;
+	}
 	public double getGrandtotal() {
 		return grandtotal;
 	}
@@ -160,60 +171,66 @@ class Calculator {
 		// Iterate through the orders
 		for (Map.Entry<String, Order> entry : o.entrySet()) {
 			System.out.println("*******" + entry.getKey() + "*******");
-//			grandtotal = 0;
-	/* !grandtotal is to count total cost of all the order, but it is
-	 *  set to 0 in every loop. so it shouldn't be here.  
-	 */
+			// grandtotal = 0;
+			/* !grandtotal is to count total cost of all the order, but it is
+			 *  set to 0 in every loop. so it shouldn't be here.  
+			 */
 
 			Order r = entry.getValue();
 
-			double totalTax = 0;
-			double total = 0;
-
-			// Iterate through the items in the order
-//			for (int i = 0; i <= r.size(); i++) {   
-			//! shouldn't be <=, should be less, because array start with 0
-			for (int i = 0; i < r.size(); i++) {
-				// Calculate the taxes
-				double tax = 0;
-
-				//Here should multiply by the quantity of items
-				if (r.get(i).getItem().getDescription().toLowerCase().contains("imported")) {
-					tax = rounding(r.get(i).getItem().getPrice() * r.get(i).getQuantity() * 0.15); // Extra 5% tax on
-					// imported items
-				} else {
-					tax = rounding(r.get(i).getItem().getPrice() * r.get(i).getQuantity() * 0.10);
-				}
-
-				// Calculate the total price
-//				double totalprice = r.get(i).getItem().getPrice() + Math.floor(tax);
-				double totalprice = rounding(r.get(i).getItem().getPrice() + tax);
-				
-				// Print out the item's total price
-//				System.out.println(r.get(i).getItem().getDescription() + ": " + Math.floor(totalprice));
-				// if the total is less than 1, than the tax will be 0 which is not
-				// reasonable
-				System.out.println(r.get(i).getItem().getDescription() + ": " + Math.floor(totalprice * 100) / 100);
-				
-				// Keep a running total
-				totalTax += tax;
-//				total += r.get(i).getItem().getPrice();
-				// total of this item should add up with tax
-				total += totalprice;
-				
-			}
+			doCalculate(r);
 
 			// Print out the total taxes
-			System.out.println("Sales Tax: " + Math.floor(totalTax * 100) / 100);
+			System.out.println("Sales Tax: " + Math.floor(curTax * 100) / 100);
 
 			// Print out the total amount
-			System.out.println("Total: " + Math.floor(total * 100) / 100 );
-			grandtotal += total;
-			grandtax += totalTax;
+			System.out.println("Total: " + Math.floor(curTotal * 100) / 100 );
+			grandtotal += curTotal;
+			grandtax += curTax;
 		}
 
 		System.out.println("Sum of orders: " + Math.floor(grandtotal * 100) / 100);
 	}
+	
+	public void doCalculate(Order r){
+		
+		curTotal = 0;
+		curTax = 0;
+		
+		// Iterate through the items in the order
+		// for (int i = 0; i <= r.size(); i++) {   
+		//! shouldn't be <=, should be less, because array start with 0
+		for (int i = 0; i < r.size(); i++) {
+			// Calculate the taxes
+			double tax = 0;
+
+			//Here should multiply by the quantity of items
+			if (r.get(i).getItem().getDescription().toLowerCase().contains("imported")) {
+				tax = rounding(r.get(i).getItem().getPrice() * r.get(i).getQuantity() * 0.15); // Extra 5% tax on
+				// imported items
+			} else {
+				tax = rounding(r.get(i).getItem().getPrice() * r.get(i).getQuantity() * 0.10);
+			}
+
+			// Calculate the total price
+			//	double totalprice = r.get(i).getItem().getPrice() + Math.floor(tax);
+			double totalprice = rounding(r.get(i).getItem().getPrice() + tax);
+			
+			// Print out the item's total price
+			// System.out.println(r.get(i).getItem().getDescription() + ": " + Math.floor(totalprice));
+			// if the total is less than 1, than the tax will be 0 which is not
+			// reasonable
+			System.out.println(r.get(i).getItem().getDescription() + ": " + Math.floor(totalprice * 100) / 100);
+			
+			// Keep a running total
+			curTax += tax;
+			// total += r.get(i).getItem().getPrice();
+			// total of this item should add up with tax
+			curTotal += totalprice;
+			
+		}
+	}
+	
 }
 
 public class Foo {
@@ -233,7 +250,7 @@ public class Foo {
 		o.put("Order 1", c);
 
 		// Reuse cart for an other order
-//		c.clear();
+		// c.clear();
 		// !We cannot reuse the Order reference c as this, it will change the
 		// order we store in the map every time. We should give allocate memory
 		// location to c every time we set new order
@@ -245,7 +262,7 @@ public class Foo {
 		o.put("Order 2", c);
 
 		// Reuse cart for an other order
-//		c.clear();
+		// c.clear();
 		// !same mistake as above
 		c = new Order();
 		

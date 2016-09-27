@@ -2,6 +2,7 @@ package com.tek.interview.question;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,9 +44,9 @@ Sum of orders: 153.81
 class Item {
 
 	private String description;
-	private float price;
+	private double price;
 
-	public Item(String description, float price) {
+	public Item(String description, double price) {
 		super();
 		this.description = description;
 		this.price = price;
@@ -55,7 +56,7 @@ class Item {
 		return description;
 	}
 
-	public float getPrice() {
+	public double getPrice() {
 		return price;
 	}
 }
@@ -80,8 +81,11 @@ class OrderLine {
 			throw new Exception("Item is NULL");
 		}
 		assert quantity > 0;
-		item = item;
-		quantity = quantity;
+		/*item = item;    //! should add this pointer before item
+		quantity = quantity;   //!same as above
+*/	
+		this.item = item;
+		this.quantity = quantity;
 	}
 
 	public Item getItem() {
@@ -102,7 +106,10 @@ class Order {
 			System.err.println("ERROR - Order is NULL");
 			throw new IllegalArgumentException("Order is NULL");
 		}
-		orderLines.add(o);
+		if (orderLines == null){
+			orderLines = new ArrayList<OrderLine>();
+		}
+		orderLines.add(o);   //orderLines the list has not initialized
 	}
 
 	public int size() {
@@ -118,12 +125,28 @@ class Order {
 	}
 }
 
-class calculator {
+class Calculator {
 
-	public static double rounding(double value) {
+/*	public static double rounding(double value) {
 		return ( (int) (value * 100)) / 100;
 	}
+	The round should keep two number after point
+	*/
 
+	private double grandtotal;
+	private double grandtax;
+	
+	public double getGrandtotal() {
+		return grandtotal;
+	}
+	public double getGrandtax() {
+		return grandtax;
+	}
+
+	public static double rounding(double value) {
+		return ( (double) (value * 100)) / 100;
+	}
+	
 	/**
 	 * receives a collection of orders. For each order, iterates on the order lines and calculate the total price which
 	 * is the item's price * quantity * taxes.
@@ -132,12 +155,15 @@ class calculator {
 	 */
 	public void calculate(Map<String, Order> o) {
 
-		double grandtotal = 0;
-
+		grandtotal = 0;
+		grandtax = 0;
 		// Iterate through the orders
 		for (Map.Entry<String, Order> entry : o.entrySet()) {
 			System.out.println("*******" + entry.getKey() + "*******");
-			grandtotal = 0;
+//			grandtotal = 0;
+	/* !grandtotal is to count total cost of all the order, but it is
+	 *  set to 0 in every loop. so it shouldn't be here.  
+	 */
 
 			Order r = entry.getValue();
 
@@ -145,37 +171,45 @@ class calculator {
 			double total = 0;
 
 			// Iterate through the items in the order
-			for (int i = 0; i <= r.size(); i++) {
-
+//			for (int i = 0; i <= r.size(); i++) {   
+			//! shouldn't be <=, should be less, because array start with 0
+			for (int i = 0; i < r.size(); i++) {
 				// Calculate the taxes
 				double tax = 0;
 
-				if (r.get(i).getItem().getDescription().contains("imported")) {
-					tax = rounding(r.get(i).getItem().getPrice() * 0.15); // Extra 5% tax on
+				//Here should multiply by the quantity of items
+				if (r.get(i).getItem().getDescription().toLowerCase().contains("imported")) {
+					tax = rounding(r.get(i).getItem().getPrice() * r.get(i).getQuantity() * 0.15); // Extra 5% tax on
 					// imported items
 				} else {
-					tax = rounding(r.get(i).getItem().getPrice() * 0.10);
+					tax = rounding(r.get(i).getItem().getPrice() * r.get(i).getQuantity() * 0.10);
 				}
 
 				// Calculate the total price
-				double totalprice = r.get(i).getItem().getPrice() + Math.floor(tax);
-
+//				double totalprice = r.get(i).getItem().getPrice() + Math.floor(tax);
+				double totalprice = rounding(r.get(i).getItem().getPrice() + tax);
+				
 				// Print out the item's total price
-				System.out.println(r.get(i).getItem().getDescription() + ": " + Math.floor(totalprice));
-
+//				System.out.println(r.get(i).getItem().getDescription() + ": " + Math.floor(totalprice));
+				// if the total is less than 1, than the tax will be 0 which is not
+				// reasonable
+				System.out.println(r.get(i).getItem().getDescription() + ": " + Math.floor(totalprice * 100) / 100);
+				
 				// Keep a running total
 				totalTax += tax;
-				total += r.get(i).getItem().getPrice();
+//				total += r.get(i).getItem().getPrice();
+				// total of this item should add up with tax
+				total += totalprice;
+				
 			}
 
 			// Print out the total taxes
-			System.out.println("Sales Tax: " + Math.floor(totalTax));
-
-			total = total + totalTax;
+			System.out.println("Sales Tax: " + Math.floor(totalTax * 100) / 100);
 
 			// Print out the total amount
-			System.out.println("Total: " + Math.floor(total * 100) / 100);
+			System.out.println("Total: " + Math.floor(total * 100) / 100 );
 			grandtotal += total;
+			grandtax += totalTax;
 		}
 
 		System.out.println("Sum of orders: " + Math.floor(grandtotal * 100) / 100);
@@ -192,31 +226,37 @@ public class Foo {
 
 		double grandTotal = 0;
 
-		c.add(new OrderLine(new Item("book", (float) 12.49), 1));
-		c.add(new OrderLine(new Item("music CD", (float) 14.99), 1));
-		c.add(new OrderLine(new Item("chocolate bar", (float) 0.85), 1));
+		c.add(new OrderLine(new Item("book", (double) 12.49), 1));
+		c.add(new OrderLine(new Item("music CD", (double) 14.99), 1));
+		c.add(new OrderLine(new Item("chocolate bar", (double) 0.85), 1));
 
 		o.put("Order 1", c);
 
 		// Reuse cart for an other order
-		c.clear();
+//		c.clear();
+		// !We cannot reuse the Order reference c as this, it will change the
+		// order we store in the map every time. We should give allocate memory
+		// location to c every time we set new order
+		c = new Order();
 
-		c.add(new OrderLine(new Item("imported box of chocolate", 10), 1));
-		c.add(new OrderLine(new Item("imported bottle of perfume", (float) 47.50), 1));
+		c.add(new OrderLine(new Item("imported box of chocolate", (double) 10), 1));
+		c.add(new OrderLine(new Item("imported bottle of perfume", (double) 47.50), 1));
 
 		o.put("Order 2", c);
 
 		// Reuse cart for an other order
-		c.clear();
-
-		c.add(new OrderLine(new Item("Imported bottle of perfume", (float) 27.99), 1));
-		c.add(new OrderLine(new Item("bottle of perfume", (float) 18.99), 1));
-		c.add(new OrderLine(new Item("packet of headache pills", (float) 9.75), 1));
-		c.add(new OrderLine(new Item("box of importd chocolates", (float) 11.25), 1));
+//		c.clear();
+		// !same mistake as above
+		c = new Order();
+		
+		c.add(new OrderLine(new Item("Imported bottle of perfume", (double) 27.99), 1));
+		c.add(new OrderLine(new Item("bottle of perfume", (double) 18.99), 1));
+		c.add(new OrderLine(new Item("packet of headache pills", (double) 9.75), 1));
+		c.add(new OrderLine(new Item("box of imported chocolates", (double) 11.25), 1));
 
 		o.put("Order 3", c);
 
-		new calculator().calculate(o);
+		new Calculator().calculate(o);
 
 	}
 }
